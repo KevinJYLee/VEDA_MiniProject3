@@ -17,6 +17,7 @@ public:
     bool updateUser(int id, const QString &name, const QString &team, const QString &position);
     bool deleteUser(int id);
     QSqlTableModel* getUserModel();
+    bool checkUser(const QString& name, const QString& team, const QString& position);
 
     static QString getDataPath();
 

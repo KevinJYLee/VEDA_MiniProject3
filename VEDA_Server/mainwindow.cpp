@@ -18,9 +18,12 @@ MainWindow::MainWindow(QWidget *parent)
     connect(m_chatServer, &ChatServer::newConnection, this, &MainWindow::onNewConnection);
     connect(m_chatServer, &ChatServer::newMessage, this, &MainWindow::onNewMessage);
     connect(m_chatServer, &ChatServer::clientDisconnected, this, &MainWindow::onClientDisconnected);
+    connect(m_chatServer,&ChatServer::loginRequested,this,&MainWindow::onClientLogin);
 
     connect(ui->startServerButton, &QPushButton::clicked, this, &MainWindow::onStartServerClicked);
     connect(ui->stopServerButton, &QPushButton::clicked, this, &MainWindow::onStopServerClicked);
+
+
 }
 
 MainWindow::~MainWindow()
@@ -46,7 +49,7 @@ void MainWindow::onStartServerClicked()
 {
     int port = ui->portNumberLabel->text().toInt();
     if (m_chatServer->start(port)) {
-        ui->textBrowser->append("Server started on port " + QString::number(port));
+        ui->textBrowser->append("Server started on " + m_chatServer->getIp()+ "::" +QString::number(port));
         ui->startServerButton->setEnabled(false);
         ui->stopServerButton->setEnabled(true);
     } else {
@@ -82,6 +85,31 @@ void MainWindow::onClientDisconnected(const QString &message)
     m_chatLogger->logConnection(message);
 }
 
+void MainWindow::onClientLogin(QTcpSocket* client, QString& name, QString& team, QString& position)
+{
+    bool loginSuccess = m_dbManager->checkUser(name, team, position);
+
+    // 클라이언트에게 보낼 응답 JSON 생성
+    QJsonObject response;
+    response["type"] = "login_response";
+
+    if (loginSuccess) {
+        response["status"] = "success";
+        response["message"] = "Login successful";
+        qDebug() << "Login successful for user:" << name;
+    } else {
+        response["status"] = "failed";
+        response["message"] = "Invalid credentials";
+        qDebug() << "Login failed for user:" << name;
+    }
+
+    // JSON을 문자열로 변환하여 클라이언트에게 전송
+    QJsonDocument doc(response);
+    client->write(doc.toJson());
+    client->flush();
+}
+
+//Connect 없이 직접 연결한다.
 void MainWindow::on_pushButton_clicked()
 {
     DBManagerWidget *dbManagerWidget = new DBManagerWidget(m_dbManager, m_chatLogger);

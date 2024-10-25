@@ -32,6 +32,10 @@ private slots:
     void onNewConnection(const QString &message);
     void onNewMessage(const QString &message);
     void onClientDisconnected(const QString &message);
+    void onClientLogin(QTcpSocket* client, QString& name, QString& team, QString& position);
+
+
+
     void on_pushButton_clicked();
 };
 

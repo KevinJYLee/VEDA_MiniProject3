@@ -126,3 +126,29 @@ QSqlTableModel* DBManager::getUserModel()
 {
     return m_userModel;
 }
+
+bool DBManager::checkUser(const QString& name, const QString& team, const QString& position)
+{
+    if (!m_userDb.isOpen()) {
+        qDebug() << "Database is not open";
+        return false;
+    }
+
+    QSqlQuery query(m_userDb);
+    query.prepare("SELECT COUNT(*) FROM users WHERE name = :name AND team = :team AND position = :position");
+    query.bindValue(":name", name);
+    query.bindValue(":team", team);
+    query.bindValue(":position", position);
+
+    if (query.exec()) {
+        if (query.next()) {
+            // COUNT(*) 쿼리의 결과가 0보다 크면 사용자가 존재한다는 의미
+            int count = query.value(0).toInt();
+            return count > 0;
+        }
+    } else {
+        qDebug() << "Error checking user:" << query.lastError().text();
+    }
+
+    return false;
+}

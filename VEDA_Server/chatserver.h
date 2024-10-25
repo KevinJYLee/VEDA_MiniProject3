@@ -5,6 +5,8 @@
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QMap>
+#include <QJsonDocument>
+#include <QJsonObject>
 
 class ChatServer : public QObject
 {
@@ -14,11 +16,14 @@ public:
     bool start(int port);
     void stop();
     QString getClientInfo(QObject* sender);
+    QString getIp();
+    quint16 getPort();
 
 signals:
     void newConnection(const QString &message);
     void newMessage(const QString &message);
     void clientDisconnected(const QString &message);
+    void loginRequested(QTcpSocket* client, QString& name, QString& team, QString& position);
 
 private slots:
     void onNewConnection();
@@ -27,7 +32,7 @@ private slots:
 
 private:
     QTcpServer *m_server;
-    QMap<QTcpSocket*, QString> m_clients;
+    QHash<QTcpSocket*, QString> m_clients;
 };
 
 #endif // CHATSERVER_H

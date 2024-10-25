@@ -6,23 +6,72 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>600</height>
+    <width>644</width>
+    <height>550</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
-  <widget class="QWidget" name="centralwidget"/>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QLineEdit" name="ipEdit">
+    <property name="geometry">
+     <rect>
+      <x>50</x>
+      <y>30</y>
+      <width>141</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="placeholderText">
+     <string>IP Address</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="portEdit">
+    <property name="geometry">
+     <rect>
+      <x>210</x>
+      <y>30</y>
+      <width>113</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="placeholderText">
+     <string>Port.No</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="connectButton">
+    <property name="geometry">
+     <rect>
+      <x>340</x>
+      <y>20</y>
+      <width>100</width>
+      <height>32</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Connect</string>
+    </property>
+   </widget>
+  </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>800</width>
+     <width>644</width>
      <height>36</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuConnect_to_Server">
+    <property name="title">
+     <string>Connect to Server..</string>
+    </property>
+   </widget>
+   <addaction name="menuConnect_to_Server"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
