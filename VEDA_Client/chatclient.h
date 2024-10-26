@@ -12,18 +12,23 @@ class ChatClient : public QObject
     Q_OBJECT
 public:
     ChatClient();
-    bool connectServer(int, QString);
-    bool tryLogin(QString, QString, QString);
+    bool connectServer(int, QString&);
+    bool tryLogin(QString&, QString&, QString&);
+    bool sendMessage(QString& );
 
 private slots:
-    void onLoginResponse();  // 서버로부터의 응답을 처리하는 슬롯
+    void onSocketReadyRead(); // 로그인 결과 및 메시지 통합 수신 처리
 
 signals:
     void loginResult(bool success, QString message);  // 로그인 결과를 알리는 시그널
+    void msgReceived(QString& message);
 
 private:
     QTcpSocket* sock;
     bool waitingForLoginResponse;  // 로그인 응답 대기 상태를 추적
+
+    void processLoginResponse(const QJsonObject& jsonObj);  // 로그인 응답 처리
+    void processRegularMessage(const QJsonObject& jsonObj); // 일반 메시지 처리
 };
 
 #endif // CHATCLIENT_H

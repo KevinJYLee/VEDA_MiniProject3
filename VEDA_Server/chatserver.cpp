@@ -34,42 +34,55 @@ void ChatServer::onNewConnection()
     emit newConnection(connectionMessage);
 }
 
-// 클라이언트로부터 데이터 수신 처리
 void ChatServer::onReadyRead()
 {
-    
+
     QTcpSocket *clientSocket = qobject_cast<QTcpSocket*>(sender());
     if (!clientSocket)
         return;
 
     QByteArray data = clientSocket->readAll();
-
-    // JSON 파싱을 통한 메시지 타입 확인
     QJsonDocument jsonDoc = QJsonDocument::fromJson(data);
+
+
+
+
     if (!jsonDoc.isNull() && jsonDoc.isObject()) {
         QJsonObject jsonObj = jsonDoc.object();
         QString msgType = jsonObj["type"].toString();
 
-        // 로그인 요청 처리
+
+
         if (msgType == "login") {
+            qDebug()<<"Message Received and Type is login"<<msgType;
             QString name = jsonObj["name"].toString();
             QString team = jsonObj["team"].toString();
             QString position = jsonObj["position"].toString();
-
-            // 로그인 요청 시그널 발생
             emit loginRequested(clientSocket, name, team, position);
-            return;  // 로그인 요청은 여기서 처리 종료
+            return;
         }
-    }
 
-    QString timestamp = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
-    QString message = QString("%1 - %2").arg(timestamp).arg(QString::fromUtf8(data));
 
-    emit newMessage(message);
+        qDebug()<<"Message Received and Type is "<<msgType;
+        // 채팅 메시지 처리
+        QString timestamp = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
 
-    // 모든 클라이언트에게 메시지 브로드캐스트
-    for (QTcpSocket *socket : m_clients.keys()) {
-        socket->write(message.toUtf8());
+        // 브로드캐스팅용 JSON 메시지 생성
+        QJsonObject broadcastObj;
+        broadcastObj["type"] = "chat";
+        broadcastObj["timestamp"] = timestamp;
+        broadcastObj["message"] = jsonObj["message"].toString();
+
+        QJsonDocument broadcastDoc(broadcastObj);
+        QByteArray broadcastData = broadcastDoc.toJson();
+
+        // 모든 클라이언트에게 메시지 브로드캐스트
+        for (QTcpSocket *socket : m_clients.keys()) {
+            socket->write(broadcastData);
+            socket->flush();  // 즉시 전송 보장
+        }
+
+        emit newMessage(QString("%1 - %2").arg(timestamp).arg(QString::fromUtf8(data)));
     }
 }
 

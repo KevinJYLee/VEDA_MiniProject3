@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 #include <QMessageBox>
+#include <QThread>
+#include <QScrollBar>
 
 #include "chatclient.h"
 
@@ -23,7 +25,10 @@ public:
 
 private slots:
     void onConnectServerClicked();
+    void onMsgSendClicked();
+    //void onFileSendClicked();
     void handleLoginResult(bool success, QString message);
+    void onMsgReceived(QString& message);
 
 
 private:
@@ -32,5 +37,7 @@ private:
     int Port;
     QString IP;
     ChatClient* m_chatclient;
+
+    QScrollBar* m_scrollbar;
 };
 #endif // MAINWINDOW_H

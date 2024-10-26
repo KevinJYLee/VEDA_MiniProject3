@@ -1,12 +1,15 @@
 #include "chatclient.h"
 
+// 생성자 수정
 ChatClient::ChatClient() : sock(new QTcpSocket(this)), waitingForLoginResponse(false)
 {
-    connect(sock, &QTcpSocket::readyRead, this, &ChatClient::onLoginResponse);
+    // readyRead 시그널을 새로운 통합 처리 함수에 연결
+    connect(sock, &QTcpSocket::readyRead, this, &ChatClient::onSocketReadyRead);
+
 }
 
 
-bool ChatClient::connectServer(int port, QString ip){
+bool ChatClient::connectServer(int port, QString& ip){
     sock = new QTcpSocket();
     // 연결 시도
     sock->connectToHost(ip, port);
@@ -21,27 +24,23 @@ bool ChatClient::connectServer(int port, QString ip){
     }
 }
 
-bool ChatClient::tryLogin(QString name, QString team, QString position)
+bool ChatClient::tryLogin(QString& name, QString& team, QString& position)
 {
     if (!sock || sock->state() != QAbstractSocket::ConnectedState) {
         qDebug() << "Socket is not connected";
         return false;
     }
 
-    // JSON 객체 생성
     QJsonObject loginData;
     loginData["type"] = "login";
     loginData["name"] = name;
     loginData["team"] = team;
     loginData["position"] = position;
 
-    // JSON 문서로 변환
     QJsonDocument doc(loginData);
     QByteArray jsonData = doc.toJson();
 
-    // 서버로 전송
     qint64 bytesWritten = sock->write(jsonData);
-
     if (bytesWritten == -1) {
         qDebug() << "Failed to send login request:" << sock->errorString();
         return false;
@@ -52,30 +51,92 @@ bool ChatClient::tryLogin(QString name, QString team, QString position)
         return false;
     }
 
-    waitingForLoginResponse = true;  // 로그인 응답 대기 상태로 설정
+    waitingForLoginResponse = true;
     return true;
 }
 
-void ChatClient::onLoginResponse()
+// 통합 수신 처리 함수
+void ChatClient::onSocketReadyRead()
 {
-    if (!waitingForLoginResponse) {
-        return;  // 로그인 응답을 기다리고 있지 않다면 무시
-    }
-
     QByteArray data = sock->readAll();
+    qDebug() << "Received data:" << data;
+
     QJsonDocument jsonDoc = QJsonDocument::fromJson(data);
-
-    if (jsonDoc.isObject()) {
-        QJsonObject response = jsonDoc.object();
-
-        if (response["type"].toString() == "login_response") {
-            bool success = (response["status"].toString() == "success");
-            QString message = response["message"].toString();
-
-            waitingForLoginResponse = false;  // 응답 처리 완료
-            emit loginResult(success, message);  // 결과 시그널 발생
-
-            qDebug() << "Login" << (success ? "successful" : "failed") << ":" << message;
-        }
+    if (!jsonDoc.isObject()) {
+        qDebug() << "Received invalid JSON data";
+        return;
     }
+
+    QJsonObject jsonObj = jsonDoc.object();
+    QString msgType = jsonObj["type"].toString();
+
+    if (msgType.isEmpty()) {
+        qDebug() << "Received JSON data without type field";
+        return;
+    }
+
+    if (msgType == "login_response" && waitingForLoginResponse) {
+        processLoginResponse(jsonObj);
+    }
+    else if (msgType == "chat") {
+        processRegularMessage(jsonObj);
+    }
+    else {
+        qDebug() << "Unknown message type:" << msgType;
+    }
+}
+
+void ChatClient::processLoginResponse(const QJsonObject& response)
+{
+    bool isSuccess = (response["status"].toString() == "success");
+    QString message = response["message"].toString();
+    waitingForLoginResponse = false;
+    emit loginResult(isSuccess, message);
+    qDebug() << "Login" << (isSuccess ? "successful" : "failed") << ":" << message;
+}
+
+// 일반 메시지 처리 함수
+void ChatClient::processRegularMessage(const QJsonObject& jsonObj)
+{
+    QString timestamp = jsonObj["timestamp"].toString();
+    QString content = jsonObj["message"].toString();
+    QString formattedMessage = QString("%1 - %2").arg(timestamp).arg(content);
+
+    qDebug() << "Emitting msgReceived signal with message:" << formattedMessage;
+    emit msgReceived(formattedMessage);
+}
+
+
+bool ChatClient::sendMessage(QString& message)
+{
+
+
+    // 소켓이 연결되어 있지 않으면 false 반환
+    if (!sock || sock->state() != QAbstractSocket::ConnectedState) {
+        return false;
+    }
+
+
+    // 일반 메시지인 경우 직접 전송
+    if (!message.isEmpty()) {
+
+
+        qint64 bytesWritten = sock->write(message.toUtf8());
+
+
+
+        // 메시지 전송이 실패하면 false 반환
+        if (bytesWritten == -1) {
+            return false;
+        }
+
+        // 버퍼에 있는 데이터를 즉시 전송
+        if (!sock->flush()) {
+            return false;
+        }
+
+
+    }
+
+    return true;
 }
