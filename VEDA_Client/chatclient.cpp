@@ -213,12 +213,3 @@ bool ChatClient::sendFile(const QByteArray &fileData)
     }
     return false;
 }
-
-bool ChatClient::sendFile(const QByteArray &fileData)
-{
-    if (sock->state() == QAbstractSocket::ConnectedState) {
-        sock->write(fileData);
-        return sock->waitForBytesWritten();
-    }
-    return false;
-}
