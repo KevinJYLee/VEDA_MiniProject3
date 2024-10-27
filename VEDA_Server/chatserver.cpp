@@ -82,9 +82,7 @@ void ChatServer::onReadyRead()
             socket->flush();  // 즉시 전송 보장
         }
 
-<<<<<<< Updated upstream
         emit newMessage(QString("%1 - %2").arg(timestamp).arg(QString::fromUtf8(data)));
-=======
         // 연결이 끊긴 클라이언트들을 별도로 제거
         for (QTcpSocket* socket : socketsToRemove) {
             qDebug() << "Removing disconnected client:" << m_clients[socket];
@@ -118,10 +116,6 @@ void ChatServer::onReadyRead()
 
             qDebug() << "File broadcasted: " << fileName;
         }
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
     }
 }
 

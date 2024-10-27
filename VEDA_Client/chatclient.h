@@ -30,17 +30,11 @@ private:
     QTcpSocket* sock;
     bool waitingForLoginResponse;  // 로그인 응답 대기 상태를 추적
 
-<<<<<<< Updated upstream
-=======
     QString m_name;
     QString m_team;
     QString m_position;
 
     void processFileMessage(const QJsonObject& jsonObj);
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
     void processLoginResponse(const QJsonObject& jsonObj);  // 로그인 응답 처리
     void processRegularMessage(const QJsonObject& jsonObj); // 일반 메시지 처리
 };

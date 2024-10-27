@@ -75,7 +75,6 @@ void ChatClient::onSocketReadyRead()
         return;
     }
 
-<<<<<<< Updated upstream
     if (msgType == "login_response" && waitingForLoginResponse) {
         processLoginResponse(jsonObj);
     }
@@ -84,7 +83,6 @@ void ChatClient::onSocketReadyRead()
     }
     else {
         qDebug() << "Unknown message type:" << msgType;
-=======
         QJsonObject jsonObj = jsonDoc.object();
         QString msgType = jsonObj["type"].toString();
 
@@ -105,7 +103,6 @@ void ChatClient::onSocketReadyRead()
         else {
             qDebug() << "Unknown message type:" << msgType;
         }
->>>>>>> Stashed changes
     }
 }
 
