@@ -37,6 +37,9 @@ private:
     QString m_position;
 
     void processFileMessage(const QJsonObject& jsonObj);
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
     void processLoginResponse(const QJsonObject& jsonObj);  // 로그인 응답 처리
     void processRegularMessage(const QJsonObject& jsonObj); // 일반 메시지 처리

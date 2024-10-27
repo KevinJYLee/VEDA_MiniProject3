@@ -118,6 +118,9 @@ void ChatServer::onReadyRead()
 
             qDebug() << "File broadcasted: " << fileName;
         }
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
     }
 }

@@ -131,6 +131,28 @@ void ChatClient::processFileMessage(const QJsonObject& jsonObj)
     }
 }
 
+void ChatClient::processFileMessage(const QJsonObject& jsonObj)
+{
+    QString fileName = jsonObj["name"].toString();
+    QByteArray fileData = QByteArray::fromBase64(jsonObj["data"].toString().toLatin1());
+
+    // 파일 저장 대화상자 표시
+    QString savePath = QFileDialog::getSaveFileName(nullptr, "Save File", fileName, "All Files (*)");
+    if (!savePath.isEmpty()) {
+        QFile file(savePath);
+        if (file.open(QIODevice::WriteOnly)) {
+            file.write(fileData);
+            file.close();
+            emit fileReceived(fileName);
+            qDebug() << "File received and saved:" << fileName;
+        } else {
+            qDebug() << "Failed to save received file:" << fileName;
+        }
+    } else {
+        qDebug() << "File save cancelled by user:" << fileName;
+    }
+}
+
 void ChatClient::processLoginResponse(const QJsonObject& response)
 {
     bool isSuccess = (response["status"].toString() == "success");
@@ -184,6 +206,15 @@ bool ChatClient::sendMessage(QString& message)
     }
 
     return true;
+}
+
+bool ChatClient::sendFile(const QByteArray &fileData)
+{
+    if (sock->state() == QAbstractSocket::ConnectedState) {
+        sock->write(fileData);
+        return sock->waitForBytesWritten();
+    }
+    return false;
 }
 
 bool ChatClient::sendFile(const QByteArray &fileData)
