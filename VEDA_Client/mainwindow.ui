@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>VEDA Chat Client</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QLineEdit" name="ipEdit">
@@ -53,7 +53,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>Connect</string>
+     <string>연결</string>
     </property>
    </widget>
    <widget class="QTextBrowser" name="textBrowser">
@@ -86,7 +86,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>Send</string>
+     <string>전송</string>
     </property>
    </widget>
    <widget class="QPushButton" name="fileSendButton">

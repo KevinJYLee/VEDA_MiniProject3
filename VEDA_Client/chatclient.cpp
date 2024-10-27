@@ -75,6 +75,7 @@ void ChatClient::onSocketReadyRead()
         return;
     }
 
+<<<<<<< Updated upstream
     if (msgType == "login_response" && waitingForLoginResponse) {
         processLoginResponse(jsonObj);
     }
@@ -83,6 +84,50 @@ void ChatClient::onSocketReadyRead()
     }
     else {
         qDebug() << "Unknown message type:" << msgType;
+=======
+        QJsonObject jsonObj = jsonDoc.object();
+        QString msgType = jsonObj["type"].toString();
+
+        if (msgType.isEmpty()) {
+            qDebug() << "Received JSON data without type field";
+            return;
+        }
+
+        if (msgType == "login_response" && waitingForLoginResponse) {
+            processLoginResponse(jsonObj);
+        }
+        else if (msgType == "chat") {
+            processRegularMessage(jsonObj);
+        }
+        else if (msgType == "file") {
+            processFileMessage(jsonObj);
+        }
+        else {
+            qDebug() << "Unknown message type:" << msgType;
+        }
+>>>>>>> Stashed changes
+    }
+}
+
+void ChatClient::processFileMessage(const QJsonObject& jsonObj)
+{
+    QString fileName = jsonObj["name"].toString();
+    QByteArray fileData = QByteArray::fromBase64(jsonObj["data"].toString().toLatin1());
+
+    // 파일 저장 대화상자 표시
+    QString savePath = QFileDialog::getSaveFileName(nullptr, "Save File", fileName, "All Files (*)");
+    if (!savePath.isEmpty()) {
+        QFile file(savePath);
+        if (file.open(QIODevice::WriteOnly)) {
+            file.write(fileData);
+            file.close();
+            emit fileReceived(fileName);
+            qDebug() << "File received and saved:" << fileName;
+        } else {
+            qDebug() << "Failed to save received file:" << fileName;
+        }
+    } else {
+        qDebug() << "File save cancelled by user:" << fileName;
     }
 }
 
@@ -139,4 +184,13 @@ bool ChatClient::sendMessage(QString& message)
     }
 
     return true;
+}
+
+bool ChatClient::sendFile(const QByteArray &fileData)
+{
+    if (sock->state() == QAbstractSocket::ConnectedState) {
+        sock->write(fileData);
+        return sock->waitForBytesWritten();
+    }
+    return false;
 }

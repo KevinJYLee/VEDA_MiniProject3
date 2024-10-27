@@ -82,7 +82,43 @@ void ChatServer::onReadyRead()
             socket->flush();  // 즉시 전송 보장
         }
 
+<<<<<<< Updated upstream
         emit newMessage(QString("%1 - %2").arg(timestamp).arg(QString::fromUtf8(data)));
+=======
+        // 연결이 끊긴 클라이언트들을 별도로 제거
+        for (QTcpSocket* socket : socketsToRemove) {
+            qDebug() << "Removing disconnected client:" << m_clients[socket];
+            m_clients.remove(socket);
+            socket->deleteLater();
+        }
+
+        // 로그 메시지 형식 수정
+        QString formattedMessage = QString("[%1] %2(%3/%4): %5")
+                                       .arg(timestamp)
+                                       .arg(jsonObj["name"].toString())
+                                       .arg(jsonObj["team"].toString())
+                                       .arg(jsonObj["position"].toString())
+                                       .arg(jsonObj["message"].toString());
+
+        emit newMessage(formattedMessage);
+
+        if (msgType == "file") {
+            QString fileName = jsonObj["name"].toString();
+
+            // 파일 데이터를 서버에 저장하지 않고 바로 브로드캐스트
+            for (QTcpSocket* socket : m_clients.keys()) {
+                if (socket != clientSocket) {  // 송신자에게는 보내지 않음
+                    socket->write(data);
+                    socket->flush();  // 즉시 전송을 보장
+                }
+            }
+
+            // 로깅이나 다른 처리를 위해 파일 전송 이벤트 발생
+            emit newFile(clientSocket, fileName);
+
+            qDebug() << "File broadcasted: " << fileName;
+        }
+>>>>>>> Stashed changes
     }
 }
 

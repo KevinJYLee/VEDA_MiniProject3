@@ -5,6 +5,7 @@
 #include <QMessageBox>
 #include <QThread>
 #include <QScrollBar>
+#include <QFileDialog>
 
 #include "chatclient.h"
 
@@ -26,10 +27,9 @@ public:
 private slots:
     void onConnectServerClicked();
     void onMsgSendClicked();
-    //void onFileSendClicked();
+    bool onFileSendClicked();
     void handleLoginResult(bool success, QString message);
     void onMsgReceived(QString& message);
-
 
 private:
     Ui::MainWindow *ui;

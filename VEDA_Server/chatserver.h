@@ -24,6 +24,7 @@ signals:
     void newMessage(const QString &message);
     void clientDisconnected(const QString &message);
     void loginRequested(QTcpSocket* client, QString& name, QString& team, QString& position);
+    void newFile(QTcpSocket* sender, const QString& fileName);
 
 private slots:
     void onNewConnection();

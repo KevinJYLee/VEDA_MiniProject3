@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 #include "logindialogue.h"
 
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow), m_chatclient(new ChatClient())
 {
@@ -11,6 +12,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(m_chatclient, &ChatClient::loginResult, this, &MainWindow::handleLoginResult);
     connect(ui->msgSendButton,&QPushButton::clicked,this,&MainWindow::onMsgSendClicked);
     connect(m_chatclient,&ChatClient::msgReceived,this,&MainWindow::onMsgReceived);
+    connect(ui->fileSendButton, &QPushButton::clicked, this, &MainWindow::onFileSendClicked);
 
     m_scrollbar = ui->textBrowser->verticalScrollBar();
 }
@@ -151,7 +153,43 @@ void MainWindow::onMsgReceived(QString& message)
     }
 }
 
+bool MainWindow::onFileSendClicked()
+{
+    QString filePath = QFileDialog::getOpenFileName(this, "Select File to Send", "", "All Files (*)");
+    if (filePath.isEmpty()) {
+        return false;  // 파일 선택이 취소되면 false 반환
+    }
+
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly)) {
+        QMessageBox::warning(this, "Error", "Cannot open file for reading");
+        return false;  // 파일을 열 수 없으면 false 반환
+    }
+
+    QByteArray fileData = file.readAll();
+    QFileInfo fileInfo(filePath);
+    QString fileName = fileInfo.fileName();
+
+    // 파일 데이터를 JSON 형식으로 변환
+    QJsonObject fileObj;
+    fileObj["type"] = "file";
+    fileObj["name"] = fileName;
+    fileObj["data"] = QString(fileData.toBase64());
+
+    QJsonDocument doc(fileObj);
+    QByteArray jsonData = doc.toJson();
+
+    // 파일 전송
+    if (!m_chatclient->sendFile(jsonData)) {
+        QMessageBox::warning(this, "Error", "Failed to send file");
+        return false;  // 파일 전송 실패 시 false 반환
+    }
+
+    return true;  // 파일 전송 성공 시 true 반환
+}
+
 MainWindow::~MainWindow()
 {
     delete ui;
 }
+
