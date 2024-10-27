@@ -32,6 +32,7 @@ private slots:
 
 private:
     QTcpServer *m_server;
+    void broadcastToClients(const QByteArray& data);
     QHash<QTcpSocket*, QString> m_clients;
 };
 

@@ -27,15 +27,13 @@ void MainWindow::onConnectServerClicked(){
             QString team = loginDialog.getTeam();
             QString position = loginDialog.getPosition();
 
-            // ChatClient에 로그인 함수가 있다고 가정
+
             bool loginSuccess = m_chatclient->tryLogin(name, team, position);
 
             if (loginSuccess) {
-                QMessageBox::information(this, "Success", "Login successful!");
-                // 추가적인 로그인 성공 처리
+                qDebug()<<"Client : Login Successful";
             } else {
-                QMessageBox::warning(this, "Error", "Login failed!");
-                // 실패 처리
+                qDebug()<<"Client : Login Fail";
             }
         }
     } else {

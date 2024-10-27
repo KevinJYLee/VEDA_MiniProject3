@@ -36,34 +36,22 @@ void ChatServer::onNewConnection()
 
 void ChatServer::onReadyRead()
 {
-
     QTcpSocket *clientSocket = qobject_cast<QTcpSocket*>(sender());
     if (!clientSocket)
         return;
-
     QByteArray data = clientSocket->readAll();
     QJsonDocument jsonDoc = QJsonDocument::fromJson(data);
-
-
-
-
     if (!jsonDoc.isNull() && jsonDoc.isObject()) {
         QJsonObject jsonObj = jsonDoc.object();
         QString msgType = jsonObj["type"].toString();
-
-
-
         if (msgType == "login") {
-            qDebug()<<"Message Received and Type is login"<<msgType;
+            qDebug() << "Message Received and Type is login" << msgType;
             QString name = jsonObj["name"].toString();
             QString team = jsonObj["team"].toString();
             QString position = jsonObj["position"].toString();
             emit loginRequested(clientSocket, name, team, position);
             return;
         }
-
-
-        qDebug()<<"Message Received and Type is "<<msgType;
         // 채팅 메시지 처리
         QString timestamp = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
 
@@ -72,17 +60,48 @@ void ChatServer::onReadyRead()
         broadcastObj["type"] = "chat";
         broadcastObj["timestamp"] = timestamp;
         broadcastObj["message"] = jsonObj["message"].toString();
+        // 발신자 정보 포함
+        broadcastObj["name"] = jsonObj["name"].toString();
+        broadcastObj["team"] = jsonObj["team"].toString();
+        broadcastObj["position"] = jsonObj["position"].toString();
 
         QJsonDocument broadcastDoc(broadcastObj);
         QByteArray broadcastData = broadcastDoc.toJson();
 
-        // 모든 클라이언트에게 메시지 브로드캐스트
-        for (QTcpSocket *socket : m_clients.keys()) {
-            socket->write(broadcastData);
-            socket->flush();  // 즉시 전송 보장
+        // 안전한 브로드캐스트
+        QList<QTcpSocket*> socketsToRemove;
+
+        // 먼저 모든 클라이언트에게 메시지 전송
+        for (auto it = m_clients.begin(); it != m_clients.end(); ++it) {
+            QTcpSocket* socket = it.key();
+            qDebug() << "broadcasting..";
+            if (socket->state() == QAbstractSocket::ConnectedState) {
+                if (socket->write(broadcastData) == -1) {
+                    qDebug() << "Failed to send data to client:" << it.value();
+                } else {
+                    socket->flush();
+                }
+            } else {
+                socketsToRemove.append(socket);
+            }
         }
 
-        emit newMessage(QString("%1 - %2").arg(timestamp).arg(QString::fromUtf8(data)));
+        // 연결이 끊긴 클라이언트들을 별도로 제거
+        for (QTcpSocket* socket : socketsToRemove) {
+            qDebug() << "Removing disconnected client:" << m_clients[socket];
+            m_clients.remove(socket);
+            socket->deleteLater();
+        }
+
+        // 로그 메시지 형식 수정
+        QString formattedMessage = QString("[%1] %2(%3/%4): %5")
+                                       .arg(timestamp)
+                                       .arg(jsonObj["name"].toString())
+                                       .arg(jsonObj["team"].toString())
+                                       .arg(jsonObj["position"].toString())
+                                       .arg(jsonObj["message"].toString());
+
+        emit newMessage(formattedMessage);
     }
 }
 
